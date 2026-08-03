@@ -6,10 +6,11 @@ levelData = {
     levelName = "",
     levelScale = 0,
     levelHighlighters = {
-        --First 1/2 are edge highlighters to show where you can move too
-        {{0,0,50,800,0.1},{750,0,50,800,0.1}},
-        {{0,0,50,800,0.1},{750,0,50,800,0.1}},
-        {{0,0,50,800,0.1},{750,0,50,800,0.1}},
-        {}{0,0,50,800,0.1},{750,0,50,800,0.1},
+        --x, y, width, height, opacity, mouse over highlight
+        --First 1/2 are edge highlighters to show where you can move too.
+        {{0,0,50,800,0.1,false},{750,0,50,800,0.1,false},{100,100,100,100,0.1,false}},
+        {{0,0,50,800,0.1,false},{750,0,50,800,0.1,false}},
+        {{0,0,50,800,0.1,false},{750,0,50,800,0.1,false}},
+        {{0,0,50,800,0.1,false},{430,400,150,250,0.1,false}},
     }
 }

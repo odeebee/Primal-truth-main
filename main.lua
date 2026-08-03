@@ -1,5 +1,6 @@
 require "levelData"
 require "player"
+require "helper"
 
 flux = require "flux"
 
@@ -10,6 +11,11 @@ movingChecker = 0
 canMove = false
 canMoveBack = false
 
+mouseX = 0
+mouseY = 0
+
+mouseInArea = false
+
 function love.load()
     love.window.setTitle("Primal truth")
     scale = levelData.levelScales[levelNum]
@@ -19,11 +25,15 @@ function love.load()
 end
 
 function love.draw()
+    --Debugging prints
+    love.graphics.setColor(255,255,255,1)
+    
+    --BACKGROUND LAYER
     love.graphics.draw(levelData.levels[levelNum],0,0)
 
-    love.graphics.print(player.x-player.width/2)
-    love.graphics.print(tostring(#levelData.levelHighlighters[1]),0,25)
-    
+    --DRAW FROM HERE
+    love.graphics.print(tostring(love.mouse.getPosition()))
+    local x,y = love.mouse.getPosition()
 
     love.graphics.rectangle("fill",
                             player.x,
@@ -31,21 +41,18 @@ function love.draw()
                             player.width*scale,
                             player.height*scale)
 
+    --Draws level highlighters
+
     --How to read level highlighters
-    --[Level][Highlighter][x / y / w / l / opacity]
-    --#levelData.levelHighlighters[1] Gives us ammount of highlighters in level
-
-        for i=1,#levelData.levelHighlighters[levelNum] do 
-            love.graphics.setColor(255,255,255,levelData.levelHighlighters[levelNum][i][5])
-            love.graphics.rectangle("fill",levelData.levelHighlighters[levelNum][i][1]
-                                        ,levelData.levelHighlighters[levelNum][i][2]
-                                        ,levelData.levelHighlighters[levelNum][i][3]
-                                        ,levelData.levelHighlighters[levelNum][i][4])
-            love.graphics.setColor(255,255,255)
-        end
-
-
-    
+    --[Level][Highlighter][x / y / w / l / opacity / mouse]
+    for i=1,#levelData.levelHighlighters[levelNum] do 
+        love.graphics.setColor(255,255,255,levelData.levelHighlighters[levelNum][i][5])
+        love.graphics.rectangle("fill",levelData.levelHighlighters[levelNum][i][1]
+                                    ,levelData.levelHighlighters[levelNum][i][2]
+                                    ,levelData.levelHighlighters[levelNum][i][3]
+                                    ,levelData.levelHighlighters[levelNum][i][4])
+        love.graphics.setColor(255,255,255,1)
+    end 
 end
 
 function love.update(deltatime)
@@ -69,6 +76,34 @@ function love.update(deltatime)
     else
         canMoveBack = false
     end
+
+    --Checks if mouse is in highlighter areas
+    local x,y = love.mouse.getPosition()
+    for k=1,#levelData.levelHighlighters[levelNum] do
+        if(isMouseInRect(x,y,levelData.levelHighlighters[levelNum][k][1],levelData.levelHighlighters[levelNum][k][2],levelData.levelHighlighters[levelNum][k][3],levelData.levelHighlighters[levelNum][k][4])) then
+            levelData.levelHighlighters[levelNum][k][6] = true
+        else
+            levelData.levelHighlighters[levelNum][k][6] = false
+        end
+    end
+
+    --Adjusts opacity for highliters 
+    for i=1,#levelData.levelHighlighters[levelNum] do
+        local mOver = levelData.levelHighlighters[levelNum][i][6]
+        local currOp = levelData.levelHighlighters[levelNum][i][5]
+        if levelData.levelHighlighters[levelNum][i][6] == true then
+            if levelData.levelHighlighters[levelNum][i][5] < 0.2 then
+                levelData.levelHighlighters[levelNum][i][5] = levelData.levelHighlighters[levelNum][i][5] + 0.01
+            end
+        else
+            if levelData.levelHighlighters[levelNum][i][5] > 0 then
+                levelData.levelHighlighters[levelNum][i][5] = levelData.levelHighlighters[levelNum][i][5] - 0.01
+            end
+        end
+    end
+
+
+            
 
     --Updates flux clock
     flux.update(deltatime)
