@@ -4,6 +4,8 @@ require "helper"
 
 flux = require "flux"
 
+font = love.graphics.getFont()
+
 scale = 0
 levelNum = 1
 movingChecker = 0
@@ -16,12 +18,21 @@ mouseY = 0
 
 mouseInArea = false
 
+showSubDisplay = false
+subDisplayWidth = 600
+subDisplayHeight = 600
+subDisplayImage = love.graphics.Image
+
+puzzle1Showing = false
+digits = {0,0,0,0}
+
 function love.load()
     love.window.setTitle("Primal truth")
     scale = levelData.levelScales[levelNum]
     love.window.setMode(800,800)
     levelData.levelName = levelData.levels[1]
     loadBgs()
+    loadSubDisplays()
 end
 
 function love.draw()
@@ -32,7 +43,8 @@ function love.draw()
     love.graphics.draw(levelData.levels[levelNum],0,0)
 
     --DRAW FROM HERE
-    love.graphics.print(tostring(love.mouse.getPosition()))
+    love.graphics.print(tostring(levelNum))
+    
     local x,y = love.mouse.getPosition()
 
     love.graphics.rectangle("fill",
@@ -53,6 +65,32 @@ function love.draw()
                                     ,levelData.levelHighlighters[levelNum][i][4])
         love.graphics.setColor(255,255,255,1)
     end 
+
+    --Sub display
+    if showSubDisplay then
+        drawSubDisplay()
+    end
+end
+
+function drawSubDisplay()
+    --Border
+    love.graphics.rectangle("fill",99,49,602,602)
+    --Display
+    love.graphics.draw(subDisplayImage,100,50)
+    --Puzzle 1
+    if(puzzle1Showing == true) then
+        love.graphics.print(tostring(digits[1]),160,365,0,5,5)
+        --Border for clicks (160,365,50,60)
+        love.graphics.print(tostring(digits[2]),310,365,0,5,5)
+        love.graphics.print(tostring(digits[3]),460,365,0,5,5)
+        love.graphics.print(tostring(digits[4]),460+150,365,0,5,5)
+    end
+    --Puzzle 1 checks
+    if(levelNum == 3) then  
+        if(digits[1] == 1 and digits[2] == 1 and digits[3] == 4 and digits[4] == 2) then
+            subDisplayImage = lock_to_forest_open
+        end
+    end
 end
 
 function love.update(deltatime)
@@ -76,6 +114,8 @@ function love.update(deltatime)
     else
         canMoveBack = false
     end
+
+    --Highlighter stuff--
 
     --Checks if mouse is in highlighter areas
     local x,y = love.mouse.getPosition()
@@ -102,9 +142,6 @@ function love.update(deltatime)
         end
     end
 
-
-            
-
     --Updates flux clock
     flux.update(deltatime)
 end
@@ -118,15 +155,60 @@ function love.keypressed(key)
         
         if canMoveBack == true then
             levelNum = levelNum - 1
-            player.x = 0
+            player.x = 650
         end
     end
 end
 
 function love.mousepressed(x,y,button,istouch)
     if button == 1 then
-        if player.moving == false then
+        if player.moving == false and showSubDisplay == false then
             flux.to(player, 1, {x=player.x, x=x-player.width/2})
+        end
+
+        if showSubDisplay == true and not isMouseInRect(x,y,100,50,600,600) then
+            showSubDisplay = false
+            subDisplayImage = placeholder
+            puzzle1Showing = false
+        end
+        --Puzzle 1 digits
+        if(showSubDisplay == true and levelNum == 3 and isMouseInRect(x,y,160,365,50,60)) then
+            if digits[1] == 9 then
+                digits[1] = 0
+            else
+                digits[1] = digits[1] + 1
+            end
+        end
+        if(showSubDisplay == true and levelNum == 3 and isMouseInRect(x,y,160+150,365,50,60)) then
+            if digits[2] == 9 then
+                digits[2] = 0
+            else
+                digits[2] = digits[2] + 1
+            end
+        end
+        if(showSubDisplay == true and levelNum == 3 and isMouseInRect(x,y,160+150*2,365,50,60)) then
+            if digits[3] == 9 then
+                digits[3] = 0
+            else
+                digits[3] = digits[3] + 1
+            end
+        end
+        if(showSubDisplay == true and levelNum == 3 and isMouseInRect(x,y,160+150*3,365,50,60)) then
+            if digits[4] == 9 then
+                digits[4] = 0
+            else
+                digits[4] = digits[4] + 1
+            end
+        end
+        --Entrance to the forest
+        if(levelNum == 3 and isMouseInRect(x,y,380,500,25,25)) then
+            subDisplayImage = lock_to_forest
+            showSubDisplay = true
+            puzzle1Showing = true
+        end 
+        --Note on shed
+        if(levelNum == 4 and isMouseInRect(x,y,480,470,30,30)) then
+            showSubDisplay = true
         end
     end
 end
@@ -143,5 +225,11 @@ function loadBgs()
 
     forest_shed = love.graphics.newImage("Pictures/Levels/Forest_Shed.png")
     levelData.levels[4] = forest_shed
+end
 
+function loadSubDisplays()
+    placeholder = love.graphics.newImage("Pictures/SubDisplays/Placeholder.png")
+    lock_to_forest = love.graphics.newImage("Pictures/SubDisplays/LockToForest.png")
+    lock_to_forest_open = love.graphics.newImage("Pictures/SubDisplays/LockToForestOpen.png")
+    subDisplayImage = placeholder
 end
