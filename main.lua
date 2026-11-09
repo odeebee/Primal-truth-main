@@ -1,6 +1,7 @@
 require "levelData"
 require "player"
 require "helper"
+require "letter"
 
 flux = require "flux"
 
@@ -26,7 +27,12 @@ subDisplayImage = love.graphics.Image
 puzzle1Showing = false
 digits = {0,0,0,0}
 
+bookText = [[]]
+
+unlockGate = false
+
 function love.load()
+    print("GAME LOADED")
     love.window.setTitle("Primal truth")
     scale = levelData.levelScales[levelNum]
     love.window.setMode(800,800)
@@ -43,7 +49,7 @@ function love.draw()
     love.graphics.draw(levelData.levels[levelNum],0,0)
 
     --DRAW FROM HERE
-    love.graphics.print(tostring(levelNum))
+    --love.graphics.print(tostring(levelNum))
     
     local x,y = love.mouse.getPosition()
 
@@ -70,8 +76,22 @@ function love.draw()
     if showSubDisplay then
         drawSubDisplay()
     end
+
+    -- love.graphics.rectangle("line",111,198-50,200,50)
+    -- love.graphics.rectangle("line",111,198,200,50)
+    -- love.graphics.rectangle("line",111,198+50,200,50)
+    -- love.graphics.rectangle("line",111,198+100,200,50)
+    -- love.graphics.rectangle("line",111,198+150,200,50)
+
+    love.graphics.print(tostring(showSubDisplay)   ,100,50)
+    if(levelNum == 4 and showSubDisplay == true) then
+        love.graphics.setColor(0,0,0,1)
+        love.graphics.print(bookText,460,70)
+        love.graphics.setColor(255,255,255,1)
+    end
 end
 
+--Called in draw()
 function drawSubDisplay()
     --Border
     love.graphics.rectangle("fill",99,49,602,602)
@@ -89,6 +109,12 @@ function drawSubDisplay()
     if(levelNum == 3) then  
         if(digits[1] == 1 and digits[2] == 1 and digits[3] == 4 and digits[4] == 2) then
             subDisplayImage = lock_to_forest_open
+            if unlockGate == false then
+                unlockGate = true
+                --Switch the highlighter from the lock to the gate
+                --354 258
+                levelData.levelHighlighters[3][3] = {354,258,200,400,0.1,false}
+            end
         end
     end
 end
@@ -208,7 +234,29 @@ function love.mousepressed(x,y,button,istouch)
         end 
         --Note on shed
         if(levelNum == 4 and isMouseInRect(x,y,480,470,30,30)) then
+            subDisplayImage = employee_handbook
             showSubDisplay = true
+        end
+        --Chapters 
+        if(isMouseInRect(x,y,111,198-50,200,50) and levelNum == 4 and showSubDisplay == true) then
+            bookText = chapter1
+        end
+        if(levelNum == 4 and showSubDisplay == true and isMouseInRect(x,y,111,198,200,50)) then
+            bookText = chapter2
+        end
+        if(levelNum == 4 and showSubDisplay == true and isMouseInRect(x,y,111,198+50,200,50)) then
+            bookText = chapter3
+        end
+        if(levelNum == 4 and showSubDisplay == true and isMouseInRect(x,y,111,198+100,200,50)) then
+            bookText = chapter4
+        end
+        if(levelNum == 4 and showSubDisplay == true and isMouseInRect(x,y,111,198+150,200,50)) then
+            bookText = chapter5
+        end
+        --Gate to forest entrance--
+        if(levelNum == 3 and isMouseInRect(x,y,354,258,200,400) and unlockGate == true) then
+            levelNum = 5
+            player.x = 100
         end
     end
 end
@@ -225,11 +273,18 @@ function loadBgs()
 
     forest_shed = love.graphics.newImage("Pictures/Levels/Forest_Shed.png")
     levelData.levels[4] = forest_shed
+
+    forest_path = love.graphics.newImage("Pictures/Levels/Forest_1.png")
+    levelData.levels[5] = forest_path
+
+    forest_path_2 = love.graphics.newImage("Pictures/Levels/Forest_2.png")
+    levelData.levels[6] = forest_path_2
 end
 
 function loadSubDisplays()
     placeholder = love.graphics.newImage("Pictures/SubDisplays/Placeholder.png")
     lock_to_forest = love.graphics.newImage("Pictures/SubDisplays/LockToForest.png")
     lock_to_forest_open = love.graphics.newImage("Pictures/SubDisplays/LockToForestOpen.png")
+    employee_handbook = love.graphics.newImage("Pictures/SubDisplays/EmployeeHandbookMain.png")
     subDisplayImage = placeholder
 end
